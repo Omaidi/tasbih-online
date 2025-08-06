@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Tasbih Online Suami Istri</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: Arial; text-align: center; padding: 20px; background: #f7f7f7; }
+    button { font-size: 20px; margin: 10px; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; }
+    .istighfar { background: #4caf50; color: white; }
+    .sholawat { background: #2196f3; color: white; }
+    .card { background: white; padding: 15px; margin: 15px auto; border-radius: 10px; max-width: 400px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+  </style>
+</head>
+<body>
+  <h2>🌙 Tasbih Online Suami Istri</h2>
+  <div class="card">
+    <select id="nama">
+      <option>Suami</option>
+      <option>Istri</option>
+    </select>
+
+    <div>
+      <button class="istighfar" onclick="kirim('istighfar')">+ Istighfar</button>
+      <button class="sholawat" onclick="kirim('sholawat')">+ Sholawat</button>
+    </div>
+
+    <p id="status">Memuat data...</p>
+  </div>
+
+  <div class="card">
+    <h3>📊 Progress Hari Ini</h3>
+    <div id="data"></div>
+  </div>
+
+<script>
+const API_URL = "PASTE_URL_WEBAPP_DISINI"; // <- Ganti dengan URL Web App Google Script
+
+function kirim(jenis) {
+  const nama = document.getElementById("nama").value;
+  fetch(API_URL, {
+    method: "POST",
+    body: JSON.stringify({ nama: nama, jenis: jenis })
+  })
+  .then(r => r.text())
+  .then(() => {
+    document.getElementById("status").innerText = "Terkirim: " + jenis;
+    loadData();
+  })
+  .catch(() => alert("Gagal kirim!"));
+}
+
+function loadData() {
+  fetch(API_URL)
+    .then(r => r.json())
+    .then(data => {
+      const target = 1000;
+      document.getElementById("data").innerHTML = `
+        <p>👤 Suami: Istighfar ${data.suami.istighfar}/${target}, Sholawat ${data.suami.sholawat}/${target}</p>
+        <p>👤 Istri: Istighfar ${data.istri.istighfar}/${target}, Sholawat ${data.istri.sholawat}/${target}</p>
+        <p>🌟 Total: Istighfar ${data.total.istighfar}, Sholawat ${data.total.sholawat}</p>
+      `;
+    })
+    .catch(() => document.getElementById("status").innerText = "Gagal memuat data.");
+}
+
+loadData();
+setInterval(loadData, 5000);
+</script>
+</body>
+</html>
