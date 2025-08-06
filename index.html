@@ -2,69 +2,66 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Tasbih Online Suami Istri</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tasbih Online Suami Istri</title>
   <style>
-    body { font-family: Arial; text-align: center; padding: 20px; background: #f7f7f7; }
-    button { font-size: 20px; margin: 10px; padding: 15px 30px; border: none; border-radius: 8px; cursor: pointer; }
-    .istighfar { background: #4caf50; color: white; }
-    .sholawat { background: #2196f3; color: white; }
-    .card { background: white; padding: 15px; margin: 15px auto; border-radius: 10px; max-width: 400px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f9f9f9; }
+    h1 { color: #2c3e50; }
+    button { font-size: 20px; margin: 10px; padding: 15px 25px; }
+    #data { margin-top: 20px; font-size: 18px; background: white; padding: 15px; border-radius: 10px; display: inline-block; }
+    #status { margin-top: 10px; color: green; font-weight: bold; }
   </style>
 </head>
 <body>
-  <h2>🌙 Tasbih Online Suami Istri</h2>
-  <div class="card">
-    <select id="nama">
-      <option>Suami</option>
-      <option>Istri</option>
-    </select>
+  <h1>🕌 Tasbih Online Suami Istri</h1>
 
-    <div>
-      <button class="istighfar" onclick="kirim('istighfar')">+ Istighfar</button>
-      <button class="sholawat" onclick="kirim('sholawat')">+ Sholawat</button>
-    </div>
+  <label>Pilih Nama:</label>
+  <select id="nama">
+    <option value="suami">Suami</option>
+    <option value="istri">Istri</option>
+  </select>
 
-    <p id="status">Memuat data...</p>
+  <div>
+    <button onclick="kirim('istighfar')">+1 Istighfar</button>
+    <button onclick="kirim('sholawat')">+1 Sholawat</button>
   </div>
 
-  <div class="card">
-    <h3>📊 Progress Hari Ini</h3>
-    <div id="data"></div>
-  </div>
+  <div id="status">Siap digunakan</div>
+  <div id="data">Memuat data...</div>
 
-<script>
-const API_URL = "https://script.google.com/macros/s/AKfycbzSzcW5lk4ukS5hk5mcpASEu1hcEyQwbNK9kmKjqTlpy2nsx-sDqiMHu19xNzWc0Zss4w/exec"; 
-function kirim(jenis) {
-  const nama = document.getElementById("nama").value;
-  fetch(API_URL, {
-    method: "POST",
-    body: JSON.stringify({ nama: nama, jenis: jenis })
-  })
-  .then(r => r.text())
-  .then(() => {
-    document.getElementById("status").innerText = "Terkirim: " + jenis;
+  <script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbzSzcW5lk4ukS5hk5mcpASEu1hcEyQwbNK9kmKjqTlpy2nsx-sDqiMHu19xNzWc0Zss4w/exec";
+
+    function kirim(jenis) {
+      const nama = document.getElementById("nama").value;
+      fetch(API_URL + "?t=" + Date.now(), {
+        method: "POST",
+        body: JSON.stringify({ nama: nama, jenis: jenis }),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(r => r.text())
+      .then(() => {
+        document.getElementById("status").innerText = "✔️ " + jenis + " terkirim!";
+        loadData(); // update tampilan segera setelah klik
+      })
+      .catch(() => alert("Gagal kirim!"));
+    }
+
+    function loadData() {
+      fetch(API_URL + "?t=" + Date.now())
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById("data").innerHTML = `
+            <p>👤 Suami: Istighfar ${data.suami.istighfar}, Sholawat ${data.suami.sholawat}</p>
+            <p>👤 Istri: Istighfar ${data.istri.istighfar}, Sholawat ${data.istri.sholawat}</p>
+            <p>🌟 Total: Istighfar ${data.total.istighfar}, Sholawat ${data.total.sholawat}</p>
+          `;
+        })
+        .catch(() => document.getElementById("status").innerText = "⚠️ Gagal memuat data.");
+    }
+
     loadData();
-  })
-  .catch(() => alert("Gagal kirim!"));
-}
-
-function loadData() {
-  fetch(API_URL)
-    .then(r => r.json())
-    .then(data => {
-      const target = 1000;
-      document.getElementById("data").innerHTML = `
-        <p>👤 Suami: Istighfar ${data.suami.istighfar}/${target}, Sholawat ${data.suami.sholawat}/${target}</p>
-        <p>👤 Istri: Istighfar ${data.istri.istighfar}/${target}, Sholawat ${data.istri.sholawat}/${target}</p>
-        <p>🌟 Total: Istighfar ${data.total.istighfar}, Sholawat ${data.total.sholawat}</p>
-      `;
-    })
-    .catch(() => document.getElementById("status").innerText = "Gagal memuat data.");
-}
-
-loadData();
-setInterval(loadData, 5000);
-</script>
+    setInterval(loadData, 5000); // refresh tiap 5 detik
+  </script>
 </body>
 </html>
