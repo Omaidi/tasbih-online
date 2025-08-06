@@ -1,74 +1,266 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Tasbih Online Suami Istri</title>
   <style>
-    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; background: #f9f9f9; }
-    h1 { color: #2c3e50; }
-    button { font-size: 20px; margin: 10px; padding: 15px 25px; }
-    #data { margin-top: 20px; font-size: 18px; background: white; padding: 15px; border-radius: 10px; display: inline-block; }
-    #status { margin-top: 10px; color: green; font-weight: bold; }
+    /* Reset dan dasar */
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f6f8;
+      color: #333;
+      margin: 0;
+      padding: 0 1rem;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    h1 {
+      margin: 2rem 0 1rem;
+      color: #2c3e50;
+      font-weight: 700;
+      font-size: 2.4rem;
+      user-select: none;
+    }
+    label {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+      display: inline-block;
+      user-select: none;
+    }
+    select {
+      font-size: 1.1rem;
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      border: 1.5px solid #ccc;
+      outline-offset: 2px;
+      transition: border-color 0.3s;
+      cursor: pointer;
+    }
+    select:focus {
+      border-color: #4a90e2;
+      box-shadow: 0 0 5px #4a90e2aa;
+    }
+
+    .buttons {
+      margin: 1.8rem 0 2rem;
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    button {
+      font-size: 1.2rem;
+      font-weight: 600;
+      background-color: #4a90e2;
+      border: none;
+      color: white;
+      padding: 1rem 2.2rem;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.3s, transform 0.15s;
+      box-shadow: 0 4px 6px rgb(74 144 226 / 0.4);
+      min-width: 140px;
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+    button:disabled {
+      background-color: #a0bce6;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    #status {
+      margin-top: -1rem;
+      min-height: 1.5rem;
+      font-weight: 600;
+      color: #27ae60;
+      user-select: none;
+      font-size: 1rem;
+      transition: color 0.3s;
+    }
+    #status.error {
+      color: #e74c3c;
+    }
+
+    #data {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgb(0 0 0 / 0.08);
+      padding: 1.8rem 2rem;
+      max-width: 400px;
+      width: 100%;
+      font-size: 1.15rem;
+      line-height: 1.5;
+      user-select: none;
+    }
+    #data p {
+      margin: 0.7rem 0;
+    }
+    #data p span.label {
+      font-weight: 700;
+      color: #34495e;
+    }
+    #data p span.value {
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    @media (max-width: 480px) {
+      button {
+        min-width: 120px;
+        font-size: 1rem;
+        padding: 0.9rem 1.5rem;
+      }
+      #data {
+        max-width: 100%;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>🕌 Tasbih Online Suami Istri</h1>
 
-  <label>Pilih Nama:</label>
-  <select id="nama">
+  <label for="nama">Pilih Nama:</label>
+  <select id="nama" name="nama" aria-label="Pilih Nama">
     <option value="suami">Suami</option>
     <option value="istri">Istri</option>
   </select>
 
-  <div>
-    <button onclick="kirim('istighfar')">+1 Istighfar</button>
-    <button onclick="kirim('sholawat')">+1 Sholawat</button>
+  <div class="buttons" role="group" aria-label="Tombol Tasbih">
+    <button id="btn-istighfar" type="button" aria-live="polite" aria-atomic="true">+1 Istighfar</button>
+    <button id="btn-sholawat" type="button" aria-live="polite" aria-atomic="true">+1 Sholawat</button>
   </div>
 
-  <div id="status">Siap digunakan</div>
-  <div id="data">Memuat data...</div>
+  <div id="status" role="status" aria-live="polite" aria-atomic="true">Siap digunakan</div>
+
+  <div id="data" aria-live="polite" aria-atomic="true" role="region" aria-label="Data Tasbih">
+    Memuat data...
+  </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzSzcW5lk4ukS5hk5mcpASEu1hcEyQwbNK9kmKjqTlpy2nsx-sDqiMHu19xNzWc0Zss4w/exec";
+    (function() {
+      const API_URL = "https://script.google.com/macros/s/AKfycbzSzcW5lk4ukS5hk5mcpASEu1hcEyQwbNK9kmKjqTlpy2nsx-sDqiMHu19xNzWc0Zss4w/exec";
 
-    // Fungsi kirim data
-    function kirim(jenis) {
-      const nama = document.getElementById("nama").value;
+      // State lokal untuk update langsung tanpa delay server
+      let localData = {
+        suami: { istighfar: 0, sholawat: 0 },
+        istri: { istighfar: 0, sholawat: 0 },
+        total: { istighfar: 0, sholawat: 0 }
+      };
 
-      // Update tampilan langsung di layar sendiri
-      document.getElementById("status").innerText = `✔️ +1 ${jenis} (lokal)`;
+      // Elemen DOM
+      const statusEl = document.getElementById('status');
+      const dataEl = document.getElementById('data');
+      const selectNama = document.getElementById('nama');
+      const btnIstighfar = document.getElementById('btn-istighfar');
+      const btnSholawat = document.getElementById('btn-sholawat');
 
-      fetch(API_URL + "?t=" + Date.now(), {
-        method: "POST",
-        body: JSON.stringify({ nama: nama, jenis: jenis }),
-        headers: { "Content-Type": "application/json" }
-      })
-      .then(r => r.text())
-      .then(() => {
-        document.getElementById("status").innerText = `✔️ ${jenis} terkirim!`;
-        loadData(); // refresh tampilan agar sinkron
-      })
-      .catch(() => alert("Gagal kirim!"));
-    }
+      // Render data ke DOM
+      function renderData(data) {
+        // Update local data
+        localData = data;
 
-    // Fungsi ambil data dari server
-    function loadData() {
-      fetch(API_URL + "?t=" + Date.now())
-        .then(r => r.json())
-        .then(data => {
-          document.getElementById("data").innerHTML = `
-            <p>👤 Suami: Istighfar ${data.suami.istighfar}, Sholawat ${data.suami.sholawat}</p>
-            <p>👤 Istri: Istighfar ${data.istri.istighfar}, Sholawat ${data.istri.sholawat}</p>
-            <p>🌟 Total: Istighfar ${data.total.istighfar}, Sholawat ${data.total.sholawat}</p>
-          `;
-        })
-        .catch(() => document.getElementById("status").innerText = "⚠️ Gagal memuat data.");
-    }
+        dataEl.innerHTML = `
+          <p>👤 <span class="label">Suami:</span> Istighfar <span class="value">${data.suami.istighfar}</span>, Sholawat <span class="value">${data.suami.sholawat}</span></p>
+          <p>👤 <span class="label">Istri:</span> Istighfar <span class="value">${data.istri.istighfar}</span>, Sholawat <span class="value">${data.istri.sholawat}</span></p>
+          <p>🌟 <span class="label">Total:</span> Istighfar <span class="value">${data.total.istighfar}</span>, Sholawat <span class="value">${data.total.sholawat}</span></p>
+        `;
+      }
 
-    // Muat pertama kali & update tiap 5 detik
-    loadData();
-    setInterval(loadData, 5000);
+      // Ambil data terbaru dari server
+      async function loadData() {
+        try {
+          const response = await fetch(API_URL + "?t=" + Date.now());
+          if (!response.ok) throw new Error('Network response not OK');
+          const data = await response.json();
+          renderData(data);
+          statusEl.textContent = '✅ Data terbaru dimuat';
+          statusEl.classList.remove('error');
+        } catch (error) {
+          statusEl.textContent = '⚠️ Gagal memuat data';
+          statusEl.classList.add('error');
+          // Jangan reset localData supaya UI tetap tampil data terakhir
+        }
+      }
+
+      // Update tampilan lokal saat tombol diklik agar UI langsung update
+      function updateLocalData(nama, jenis) {
+        if(localData[nama] && typeof localData[nama][jenis] === "number") {
+          localData[nama][jenis]++;
+          // Update total juga
+          if(localData.total && typeof localData.total[jenis] === "number") {
+            localData.total[jenis]++;
+          }
+          renderData(localData);
+        }
+      }
+
+      // Fungsi kirim data ke server
+      async function kirim(nama, jenis) {
+        // Disable tombol supaya gak spam
+        btnIstighfar.disabled = true;
+        btnSholawat.disabled = true;
+        statusEl.textContent = `⏳ Mengirim +1 ${jenis} untuk ${nama}...`;
+        statusEl.classList.remove('error');
+
+        // Update UI lokal dulu
+        updateLocalData(nama, jenis);
+
+        try {
+          const response = await fetch(API_URL + "?t=" + Date.now(), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ nama: nama, jenis: jenis }),
+          });
+
+          if (!response.ok) throw new Error('Gagal kirim data');
+
+          statusEl.textContent = `✔️ +1 ${jenis} untuk ${nama} terkirim!`;
+          statusEl.classList.remove('error');
+          // Muat ulang data server untuk sinkronisasi penuh
+          await loadData();
+        } catch (error) {
+          statusEl.textContent = `❌ Gagal mengirim +1 ${jenis} untuk ${nama}. Coba lagi.`;
+          statusEl.classList.add('error');
+          // Jika gagal, rollback update lokal (optional)
+          if(localData[nama] && typeof localData[nama][jenis] === "number") {
+            localData[nama][jenis] = Math.max(0, localData[nama][jenis] - 1);
+            if(localData.total && typeof localData.total[jenis] === "number") {
+              localData.total[jenis] = Math.max(0, localData.total[jenis] -1);
+            }
+            renderData(localData);
+          }
+        } finally {
+          btnIstighfar.disabled = false;
+          btnSholawat.disabled = false;
+        }
+      }
+
+      // Event listener tombol
+      btnIstighfar.addEventListener('click', () => {
+        const nama = selectNama.value;
+        kirim(nama, 'istighfar');
+      });
+
+      btnSholawat.addEventListener('click', () => {
+        const nama = selectNama.value;
+        kirim(nama, 'sholawat');
+      });
+
+      // Muat data pertama kali & refresh berkala
+      loadData();
+      setInterval(loadData, 8000);
+    })();
   </script>
 </body>
 </html>
