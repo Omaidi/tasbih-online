@@ -32,8 +32,13 @@
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzSzcW5lk4ukS5hk5mcpASEu1hcEyQwbNK9kmKjqTlpy2nsx-sDqiMHu19xNzWc0Zss4w/exec";
 
+    // Fungsi kirim data
     function kirim(jenis) {
       const nama = document.getElementById("nama").value;
+
+      // Update tampilan langsung di layar sendiri
+      document.getElementById("status").innerText = `✔️ +1 ${jenis} (lokal)`;
+
       fetch(API_URL + "?t=" + Date.now(), {
         method: "POST",
         body: JSON.stringify({ nama: nama, jenis: jenis }),
@@ -41,12 +46,13 @@
       })
       .then(r => r.text())
       .then(() => {
-        document.getElementById("status").innerText = "✔️ " + jenis + " terkirim!";
-        loadData(); // update tampilan segera setelah klik
+        document.getElementById("status").innerText = `✔️ ${jenis} terkirim!`;
+        loadData(); // refresh tampilan agar sinkron
       })
       .catch(() => alert("Gagal kirim!"));
     }
 
+    // Fungsi ambil data dari server
     function loadData() {
       fetch(API_URL + "?t=" + Date.now())
         .then(r => r.json())
@@ -60,8 +66,9 @@
         .catch(() => document.getElementById("status").innerText = "⚠️ Gagal memuat data.");
     }
 
+    // Muat pertama kali & update tiap 5 detik
     loadData();
-    setInterval(loadData, 5000); // refresh tiap 5 detik
+    setInterval(loadData, 5000);
   </script>
 </body>
 </html>
